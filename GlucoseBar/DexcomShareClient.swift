@@ -43,6 +43,11 @@ class DexcomShareClient {
     private var sessionId: String?
     private var accountId: String?
 
+    func reset() {
+        self.sessionId = nil
+        self.accountId = nil
+    }
+
     private let endpoints = [
         "us": "https://share2.dexcom.com/ShareWebServices/Services",
         "ous": "https://shareous1.dexcom.com/ShareWebServices/Services",

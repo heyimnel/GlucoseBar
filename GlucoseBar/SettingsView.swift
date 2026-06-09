@@ -471,7 +471,7 @@ struct SettingsView: View {
         catch { apiSecret = nil }
 
         var request = URLRequest(url: url, timeoutInterval: 10)
-        if let s = apiSecret { request.setValue(s, forHTTPHeaderField: "api-secret") }
+        if let s = apiSecret { request.setValue(s.sha1Hex, forHTTPHeaderField: "api-secret") }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {

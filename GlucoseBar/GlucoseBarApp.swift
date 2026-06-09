@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import os.log
+import CommonCrypto
 
 @main
 struct GlucoseBarApp: App {
@@ -106,7 +107,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func refreshNow() {
+        // Hard reset
+        currentTask?.cancel()
+        isRefreshing = false
+        dexcomClient.reset()
         retryCount = 0
+        
+        logger.info("Manual refresh triggered - performing hard reset")
         fetchGlucoseData()
     }
 
@@ -166,7 +173,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var request = URLRequest(url: url, timeoutInterval: 10)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         if let s = currentApiSecret() {
-            request.setValue(s, forHTTPHeaderField: "api-secret")
+            request.setValue(s.sha1Hex, forHTTPHeaderField: "api-secret")
         }
 
         currentTask = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -377,5 +384,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case "SingleDown", "DoubleDown": return "↓"
         default: return "→"
         }
+    }
+}
+
+extension String {
+    var sha1Hex: String {
+        let data = Data(self.utf8)
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
+        data.withUnsafeBytes { bytes in
+            _ = CC_SHA1(bytes.baseAddress, CC_LONG(data.count), &digest)
+        }
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 }
